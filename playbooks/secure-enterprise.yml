@@ -1,0 +1,16 @@
+---
+- name: Enterprise Security Hardening
+  hosts: all
+  become: yes
+  vars:
+    security_level: enterprise
+  roles:
+    - system_hardening
+    - network_security
+    - logging_monitoring
+    - backup_security
+    - unattended-upgrades
+    - firewall
+    - ssh_hardening
+    - fail2ban
+    - monitoring

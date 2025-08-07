@@ -1,2 +1,5 @@
 [raspberry_pi]
-localhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3
+localhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3 ansible_python_interpreter=/usr/bin/python3
+
+# Personal Raspberry Pi - not versioned in git
+rpi.local ansible_user=valentin ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3

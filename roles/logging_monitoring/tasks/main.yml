@@ -1,0 +1,47 @@
+---
+- name: Install logging packages
+  apt:
+    name:
+      - rsyslog
+      - logrotate
+      - logwatch
+      - syslog-ng
+    state: present
+
+- name: Configure rsyslog
+  template:
+    src: rsyslog.conf.j2
+    dest: /etc/rsyslog.conf
+    mode: '0644'
+  notify: restart rsyslog
+
+- name: Create log directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /var/log/security
+    - /var/log/audit
+    - /var/log/network
+
+- name: Configure logrotate for security logs
+  copy:
+    content: |
+      /var/log/security/*.log {
+          daily
+          missingok
+          rotate 30
+          compress
+          delaycompress
+          notifempty
+          create 644 root root
+      }
+    dest: /etc/logrotate.d/security
+    mode: '0644'
+
+- name: Enable and start rsyslog
+  systemd:
+    name: rsyslog
+    state: started
+    enabled: yes

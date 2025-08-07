@@ -16,3 +16,5 @@
     name: fail2ban
     state: started
     enabled: yes
+    daemon_reload: yes
+  ignore_errors: yes

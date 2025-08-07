@@ -1,0 +1,33 @@
+# Global variables for all hosts
+---
+# Security settings
+security:
+  ssh_port: 22
+  ssh_protocol: 2
+  ssh_timeout: 60
+  ssh_max_auth_tries: 3
+  
+# Firewall settings
+firewall:
+  allowed_ports:
+    - 22  # SSH
+  allowed_protocols:
+    - tcp
+  log_level: low
+  
+# Fail2ban settings
+fail2ban:
+  bantime: 3600
+  findtime: 600
+  maxretry: 3
+  
+# Monitoring settings
+monitoring:
+  netdata_port: 19999
+  netdata_web_group: netdata
+  
+# Backup settings
+backup:
+  retention_days: 30
+  backup_hour: 2
+  backup_minute: 0

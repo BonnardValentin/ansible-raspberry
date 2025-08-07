@@ -1,181 +1,427 @@
-# Ansible Raspberry Pi Security
+# 🔒 Ansible Security Hardening Suite
 
-This Ansible project provides a comprehensive security setup for Raspberry Pi devices and cloud servers running Ubuntu/Debian.
+[![Ansible](https://img.shields.io/badge/Ansible-2.9+-red.svg)](https://www.ansible.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Ubuntu%20%7C%20Debian-blue.svg)](https://ubuntu.com/)
 
-## 🎯 Overview
+> **Enterprise-grade security hardening for Raspberry Pi, VPS, and cloud servers**
 
-This project implements security best practices through modular Ansible roles, making it easy to secure both local Raspberry Pi devices and remote cloud servers.
+This Ansible project implements comprehensive security hardening following CIS benchmarks, DevSecOps practices, and industry best practices. It provides modular, idempotent roles for securing Ubuntu/Debian systems in various environments.
 
-## 🔧 Roles
+## 🎯 Features
 
-### Core Security Roles (All Environments)
-- **`unattended-upgrades`**: Enables automatic security updates and package management
-  - Installs and configures unattended-upgrades package
-  - Automatically downloads and installs security updates
-  - Configures cleanup intervals and verbosity settings
+### 🔐 Core Security Roles
+- **`unattended-upgrades`** - Automated security updates
+- **`firewall`** - UFW firewall configuration
+- **`ssh_hardening`** - SSH security hardening
+- **`fail2ban`** - Brute force protection
+- **`monitoring`** - Netdata system monitoring
 
-- **`firewall`**: Configures UFW firewall with secure defaults
-  - Installs and enables UFW (Uncomplicated Firewall)
-  - Allows only SSH connections by default
-  - Blocks all other incoming traffic
+### 🛡️ Advanced Security Roles
+- **`system_hardening`** - CIS-level system hardening
+- **`network_security`** - Advanced network protection
+- **`logging_monitoring`** - Centralized logging
+- **`backup_security`** - Automated security backups
 
-- **`ssh_hardening`**: Hardens SSH configuration for enhanced security
-  - Disables password authentication (key-based only)
-  - Disables root login
-  - Creates backup of original sshd_config
+### 🍓 Raspberry Pi Specific
+- **`p2p_disable`** - Wi-Fi P2P disable
+- **`disable_bluetooth_audio`** - Bluetooth/audio modules disable
 
-- **`fail2ban`**: Protects against brute force attacks
-  - Installs and configures fail2ban
-  - Monitors SSH login attempts
-  - Bans IPs after 3 failed attempts for 1 hour
+## 📋 Prerequisites
 
-- **`monitoring`**: Installs Netdata for real-time system monitoring
-  - Installs Netdata monitoring agent
-  - Provides web-based dashboard for system metrics
-  - Enables automatic startup
+### Control Machine
+- **Ansible 2.9+** installed
+- **Python 3.7+**
+- **SSH client** configured
+- **Git** for version control
 
-### Raspberry Pi Specific Roles
-- **`p2p_disable`**: Disables Wi-Fi P2P mode
-  - Configures brcmfmac module to disable P2P functionality
-  - Reduces attack surface and power consumption
+### Target Systems
+- **Ubuntu 18.04+** or **Debian 10+**
+- **Python 3** available
+- **Sudo privileges** for Ansible user
+- **SSH key-based authentication** configured
 
-- **`disable_bluetooth_audio`**: Disables Bluetooth and audio modules
-  - Blacklists bluetooth, audio, and related kernel modules
-  - Stops and disables bluetooth service
-  - Reduces power consumption and attack surface
+### Security Requirements
+- **SSH key pair** generated and deployed
+- **Backup strategy** in place
+- **Network access** to target systems
+- **Documentation** of current configuration
 
-## 🚀 Usage
+## 🚀 Quick Start
 
-### Prerequisites
-
-- **Ansible 2.9+** installed on your control machine
-- **Python 3** on target systems
-- **SSH key-based authentication** configured for remote servers
-- **Sudo privileges** on target systems
-- **Ubuntu/Debian-based** target systems
-
-### Local Deployment (Raspberry Pi)
-
-For securing a local Raspberry Pi or similar device:
-
+### 1. Clone the Repository
 ```bash
-# Run the complete security setup
+git clone https://github.com/BonnardValentin/ansible-raspberry.git
+cd ansible-raspberry
+```
+
+### 2. Configure Inventory
+```bash
+# Edit inventories/hosts for localhost
+# Edit inventories/cloud/hosts.ini for remote servers
+```
+
+### 3. Test Connectivity
+```bash
+# Test local connection
+ansible -i inventories/hosts raspberry_pi -m ping
+
+# Test remote connection
+ansible -i inventories/cloud/hosts.ini cloud_servers -m ping
+```
+
+### 4. Run Security Hardening
+```bash
+# Raspberry Pi (local)
 ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml
 
-# Run with verbose output for debugging
-ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml -v
+# Cloud servers
+ansible-playbook -i inventories/cloud/hosts.ini playbooks/secure-cloud.yml
+
+# Enterprise hardening
+ansible-playbook -i inventories/hosts playbooks/secure-enterprise.yml
 ```
-
-### Cloud Deployment (Remote Servers)
-
-For securing remote cloud servers:
-
-1. **Update inventory** with your server details:
-   ```bash
-   # Edit inventories/cloud/hosts.ini
-   # Replace the example IP and user with your actual server details
-   ```
-
-2. **Test connectivity**:
-   ```bash
-   ansible -i inventories/cloud/hosts.ini cloud_servers -m ping
-   ```
-
-3. **Run security setup**:
-   ```bash
-   # Apply core security roles (excludes Pi-specific roles)
-   ansible-playbook -i inventories/cloud/hosts.ini playbooks/secure-cloud.yml
-
-   # Run with verbose output
-   ansible-playbook -i inventories/cloud/hosts.ini playbooks/secure-cloud.yml -v
-   ```
-
-### Selective Role Execution
-
-Run specific roles only:
-
-```bash
-# Example: Only apply firewall and SSH hardening
-ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml --tags firewall,ssh_hardening
-
-# Example: Skip monitoring installation
-ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml --skip-tags monitoring
-```
-
-## 🔒 Security Recommendations
-
-### Before Running
-1. **Backup your system** - Some roles modify critical system files
-2. **Test in a safe environment** - Use a VM or test device first
-3. **Ensure SSH key access** - Password authentication will be disabled
-4. **Document current SSH configuration** - Backup sshd_config before changes
-
-### After Running
-1. **Verify SSH access** - Test SSH connection before closing current session
-2. **Check firewall rules** - Verify UFW is active and SSH is allowed
-3. **Monitor fail2ban logs** - Check `/var/log/fail2ban.log` for blocked attempts
-4. **Test monitoring** - Access Netdata dashboard (usually on port 19999)
-
-### Important Notes
-- **SSH password authentication will be disabled** - Ensure you have SSH key access
-- **Root login will be disabled** - Use sudo for administrative tasks
-- **Firewall will block all non-SSH traffic** - Configure additional rules if needed
-- **Automatic updates will be enabled** - Monitor system for update-related issues
 
 ## 📁 Project Structure
 
 ```
 ansible-raspberry/
 ├── ansible.cfg                 # Ansible configuration
+├── group_vars/
+│   └── all.yml                # Global variables
 ├── inventories/
 │   ├── hosts                   # Localhost inventory
 │   └── cloud/
 │       └── hosts.ini          # Cloud servers inventory
 ├── playbooks/
-│   ├── secure-rpi.yml         # Raspberry Pi security playbook
-│   └── secure-cloud.yml       # Cloud server security playbook
+│   ├── secure-rpi.yml         # Raspberry Pi security
+│   ├── secure-cloud.yml       # Cloud server security
+│   └── secure-enterprise.yml  # Enterprise hardening
 ├── roles/
-│   ├── unattended-upgrades/   # Automatic security updates
-│   ├── firewall/              # UFW firewall configuration
-│   ├── ssh_hardening/         # SSH security hardening
+│   ├── backup_security/       # Automated backups
+│   ├── disable_bluetooth_audio/ # Bluetooth disable
 │   ├── fail2ban/              # Brute force protection
-│   ├── p2p_disable/           # Wi-Fi P2P disable (Pi only)
-│   ├── disable_bluetooth_audio/ # Bluetooth/audio disable (Pi only)
-│   └── monitoring/            # Netdata monitoring
+│   ├── firewall/              # UFW firewall
+│   ├── logging_monitoring/    # Centralized logging
+│   ├── monitoring/            # Netdata monitoring
+│   ├── network_security/      # Advanced networking
+│   ├── p2p_disable/           # Wi-Fi P2P disable
+│   ├── ssh_hardening/         # SSH security
+│   └── system_hardening/      # CIS-level hardening
+├── .gitignore                 # Git ignore rules
+├── LICENSE                    # MIT License
 └── README.md                  # This file
 ```
+
+## 🔧 Role Details
+
+### Core Security Roles
+
+#### `unattended-upgrades`
+- **Purpose**: Automated security updates
+- **Features**:
+  - Installs unattended-upgrades package
+  - Configures automatic security updates
+  - Sets cleanup intervals and verbosity
+- **Configuration**: `/etc/apt/apt.conf.d/20auto-upgrades`
+
+#### `firewall`
+- **Purpose**: UFW firewall configuration
+- **Features**:
+  - Installs and configures UFW
+  - Allows SSH (port 22) only
+  - Blocks all other incoming traffic
+- **Configuration**: UFW rules and policies
+
+#### `ssh_hardening`
+- **Purpose**: SSH security hardening
+- **Features**:
+  - Disables password authentication
+  - Disables root login
+  - Creates backup of sshd_config
+- **Configuration**: `/etc/ssh/sshd_config`
+
+#### `fail2ban`
+- **Purpose**: Brute force protection
+- **Features**:
+  - Monitors SSH login attempts
+  - Bans IPs after failed attempts
+  - Configurable ban time and retry limits
+- **Configuration**: `/etc/fail2ban/jail.local`
+
+#### `monitoring`
+- **Purpose**: System monitoring with Netdata
+- **Features**:
+  - Installs Netdata monitoring agent
+  - Provides web-based dashboard
+  - Real-time system metrics
+- **Access**: `http://host:19999`
+
+### Advanced Security Roles
+
+#### `system_hardening`
+- **Purpose**: CIS-level system hardening
+- **Features**:
+  - Password quality policies
+  - Session timeout configuration
+  - Kernel parameter hardening
+  - Auditd configuration
+  - AppArmor profiles
+  - Service disablement
+
+#### `network_security`
+- **Purpose**: Advanced network protection
+- **Features**:
+  - iptables rules configuration
+  - TCP wrappers setup
+  - Network monitoring tools
+  - ICMP rate limiting
+
+#### `logging_monitoring`
+- **Purpose**: Centralized logging
+- **Features**:
+  - rsyslog configuration
+  - Security log rotation
+  - Audit log management
+  - Structured logging
+
+#### `backup_security`
+- **Purpose**: Automated security backups
+- **Features**:
+  - Critical config backups
+  - Log file backups
+  - Automated cleanup
+  - Cron job scheduling
+
+## 🎛️ Usage Examples
+
+### Basic Security (Raspberry Pi)
+```bash
+# Apply basic security hardening
+ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml
+
+# With verbose output
+ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml -v
+
+# Dry run (check mode)
+ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml --check
+```
+
+### Cloud Server Security
+```bash
+# Apply cloud security (excludes Pi-specific roles)
+ansible-playbook -i inventories/cloud/hosts.ini playbooks/secure-cloud.yml
+
+# Target specific hosts
+ansible-playbook -i inventories/cloud/hosts.ini playbooks/secure-cloud.yml --limit server1
+```
+
+### Enterprise Hardening
+```bash
+# Apply enterprise-grade security
+ansible-playbook -i inventories/hosts playbooks/secure-enterprise.yml
+
+# With custom variables
+ansible-playbook -i inventories/hosts playbooks/secure-enterprise.yml \
+  -e "security_level=high"
+```
+
+### Selective Role Execution
+```bash
+# Run specific roles only
+ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml \
+  --tags firewall,ssh_hardening
+
+# Skip specific roles
+ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml \
+  --skip-tags monitoring
+```
+
+## 🔒 Security Best Practices
+
+### Before Deployment
+1. **Backup your system** - Critical configurations will be modified
+2. **Test in safe environment** - Use VM or test device first
+3. **Verify SSH key access** - Password authentication will be disabled
+4. **Document current config** - Backup important files
+5. **Review firewall rules** - Ensure required services are accessible
+
+### During Deployment
+1. **Monitor execution** - Watch for any errors or warnings
+2. **Keep SSH session open** - In case of connectivity issues
+3. **Verify each role** - Check that changes are applied correctly
+4. **Test connectivity** - Ensure SSH access remains functional
+
+### After Deployment
+1. **Verify SSH access** - Test connection before closing session
+2. **Check firewall status** - Confirm UFW is active and rules are correct
+3. **Monitor fail2ban** - Check for blocked attempts
+4. **Test monitoring** - Access Netdata dashboard
+5. **Review logs** - Check for any issues or warnings
+
+### Ongoing Maintenance
+1. **Regular backups** - Automated backups run daily at 2 AM
+2. **Log monitoring** - Review security logs regularly
+3. **Update playbooks** - Keep Ansible roles updated
+4. **Security audits** - Regular security assessments
+5. **Documentation** - Keep deployment notes updated
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-**SSH connection lost after running:**
-- Ensure you have SSH key authentication configured
-- Check if your SSH key is in the authorized_keys file
-- Verify the SSH service is running: `sudo systemctl status ssh`
+#### SSH Connection Lost
+```bash
+# Check SSH service status
+sudo systemctl status ssh
 
-**Firewall blocking access:**
-- Check UFW status: `sudo ufw status`
-- Temporarily allow your IP: `sudo ufw allow from YOUR_IP`
+# Verify SSH configuration
+sudo sshd -t
 
-**Fail2ban blocking your IP:**
-- Check fail2ban status: `sudo fail2ban-client status sshd`
-- Unban your IP: `sudo fail2ban-client set sshd unbanip YOUR_IP`
+# Check authorized keys
+cat ~/.ssh/authorized_keys
+```
 
-### Logs to Monitor
-- SSH: `/var/log/auth.log`
-- Fail2ban: `/var/log/fail2ban.log`
-- UFW: `/var/log/ufw.log`
-- Unattended-upgrades: `/var/log/unattended-upgrades/`
+#### Firewall Blocking Access
+```bash
+# Check UFW status
+sudo ufw status verbose
+
+# Temporarily allow your IP
+sudo ufw allow from YOUR_IP
+
+# Check iptables rules
+sudo iptables -L -n
+```
+
+#### Fail2ban Blocking Your IP
+```bash
+# Check fail2ban status
+sudo fail2ban-client status sshd
+
+# Unban your IP
+sudo fail2ban-client set sshd unbanip YOUR_IP
+
+# Check fail2ban logs
+sudo tail -f /var/log/fail2ban.log
+```
+
+#### Service Issues
+```bash
+# Check service status
+sudo systemctl status SERVICE_NAME
+
+# View service logs
+sudo journalctl -u SERVICE_NAME -f
+
+# Restart service
+sudo systemctl restart SERVICE_NAME
+```
+
+### Log Locations
+- **SSH**: `/var/log/auth.log`
+- **Fail2ban**: `/var/log/fail2ban.log`
+- **UFW**: `/var/log/ufw.log`
+- **Audit**: `/var/log/audit/audit.log`
+- **System**: `/var/log/syslog`
+- **Security**: `/var/log/security/`
+
+### Debug Commands
+```bash
+# Test Ansible connectivity
+ansible -i inventories/hosts all -m ping -v
+
+# Check facts
+ansible -i inventories/hosts all -m setup
+
+# Run with maximum verbosity
+ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml -vvv
+
+# Check specific role
+ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml --tags firewall --check
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+```bash
+# Set custom variables
+export ANSIBLE_SSH_ARGS="-o ControlMaster=auto -o ControlPersist=60s"
+export ANSIBLE_TIMEOUT=30
+```
+
+### Custom Variables
+```yaml
+# group_vars/all.yml
+security:
+  ssh_port: 2222  # Custom SSH port
+  ssh_max_auth_tries: 5
+
+firewall:
+  allowed_ports:
+    - 22   # SSH
+    - 80   # HTTP
+    - 443  # HTTPS
+```
+
+### Inventory Configuration
+```ini
+# inventories/cloud/hosts.ini
+[web_servers]
+web1 ansible_host=192.168.1.10 ansible_user=ubuntu
+web2 ansible_host=192.168.1.11 ansible_user=ubuntu
+
+[web_servers:vars]
+ansible_ssh_private_key_file=~/.ssh/id_rsa
+ansible_python_interpreter=/usr/bin/python3
+```
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+### Development Setup
+1. **Fork the repository**
+2. **Create feature branch**: `git checkout -b feature/new-role`
+3. **Make changes** following Ansible best practices
+4. **Test thoroughly** on different environments
+5. **Update documentation** for any new features
+6. **Submit pull request** with detailed description
+
+### Code Standards
+- **Idempotent tasks** - All tasks must be idempotent
+- **Error handling** - Use `ignore_errors` appropriately
+- **Variable usage** - Use variables for configurable values
+- **Documentation** - Comment complex tasks
+- **Testing** - Test on multiple Ubuntu/Debian versions
+
+### Testing
+```bash
+# Test on localhost
+ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml --check
+
+# Test on remote server
+ansible-playbook -i inventories/cloud/hosts.ini playbooks/secure-cloud.yml --check
+
+# Run specific role tests
+ansible-playbook -i inventories/hosts playbooks/secure-rpi.yml --tags firewall --check
+```
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **CIS Benchmarks** for security hardening guidelines
+- **Ansible Community** for best practices and modules
+- **Ubuntu Security Team** for security recommendations
+- **Open Source Community** for tools and inspiration
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/BonnardValentin/ansible-raspberry/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/BonnardValentin/ansible-raspberry/discussions)
+- **Documentation**: [Wiki](https://github.com/BonnardValentin/ansible-raspberry/wiki)
+
+---
+
+**⚠️ Disclaimer**: This project is for educational and security hardening purposes. Always test in a safe environment before deploying to production systems. The authors are not responsible for any damage or data loss resulting from the use of this project.

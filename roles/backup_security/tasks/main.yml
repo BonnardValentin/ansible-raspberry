@@ -1,0 +1,60 @@
+---
+- name: Install backup tools
+  apt:
+    name:
+      - rsync
+      - tar
+      - gzip
+      - bzip2
+      - duplicity
+    state: present
+
+- name: Create backup directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0750'
+    owner: root
+    group: root
+  loop:
+    - /var/backups/security
+    - /var/backups/configs
+    - /var/backups/logs
+
+- name: Create backup script
+  copy:
+    content: |
+      #!/bin/bash
+      BACKUP_DIR="/var/backups/security"
+      DATE=$(date +%Y%m%d_%H%M%S)
+      
+      # Backup critical configs
+      tar -czf $BACKUP_DIR/configs_$DATE.tar.gz \
+        /etc/ssh/ \
+        /etc/fail2ban/ \
+        /etc/ufw/ \
+        /etc/audit/ \
+        /etc/pam.d/ \
+        /etc/security/
+      
+      # Backup logs
+      tar -czf $BACKUP_DIR/logs_$DATE.tar.gz \
+        /var/log/auth.log \
+        /var/log/fail2ban.log \
+        /var/log/ufw.log \
+        /var/log/audit/
+      
+      # Clean old backups (keep 30 days)
+      find $BACKUP_DIR -name "*.tar.gz" -mtime +30 -delete
+    dest: /usr/local/bin/security-backup.sh
+    mode: '0750'
+    owner: root
+    group: root
+
+- name: Create backup cron job
+  cron:
+    name: "Security backup"
+    hour: "2"
+    minute: "0"
+    job: "/usr/local/bin/security-backup.sh"
+    user: root

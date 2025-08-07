@@ -1,0 +1,43 @@
+---
+- name: Install network security tools
+  apt:
+    name:
+      - iptables-persistent
+      - nftables
+      - tcpdump
+      - wireshark-common
+      - nmap
+    state: present
+
+- name: Configure iptables rules
+  iptables:
+    chain: "{{ item.chain }}"
+    rule: "{{ item.rule }}"
+    action: "{{ item.action }}"
+  loop:
+    - { chain: 'INPUT', rule: '-p tcp --dport 22 -j ACCEPT', action: 'insert' }
+    - { chain: 'INPUT', rule: '-i lo -j ACCEPT', action: 'insert' }
+    - { chain: 'INPUT', rule: '-m state --state ESTABLISHED,RELATED -j ACCEPT', action: 'insert' }
+    - { chain: 'INPUT', rule: '-p icmp --icmp-type echo-request -m limit --limit 1/s -j ACCEPT', action: 'insert' }
+    - { chain: 'INPUT', rule: '-j DROP', action: 'append' }
+    - { chain: 'FORWARD', rule: '-j DROP', action: 'append' }
+
+- name: Save iptables rules
+  shell: iptables-save > /etc/iptables/rules.v4
+  args:
+    creates: /etc/iptables/rules.v4
+
+- name: Configure TCP wrappers
+  lineinfile:
+    path: /etc/hosts.allow
+    line: "{{ item }}"
+    state: present
+  loop:
+    - "sshd: ALL"
+    - "ALL: 127.0.0.1"
+
+- name: Configure hosts.deny
+  copy:
+    content: "ALL: ALL"
+    dest: /etc/hosts.deny
+    mode: '0644'

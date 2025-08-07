@@ -16,3 +16,4 @@
     name: bluetooth
     state: stopped
     enabled: no
+  ignore_errors: yes

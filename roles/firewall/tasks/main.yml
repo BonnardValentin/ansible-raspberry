@@ -8,10 +8,11 @@
   ufw:
     state: reset
 
-- name: Allow SSH
+- name: Allow SSH on port 22
   ufw:
     rule: allow
-    name: ssh
+    port: '22'
+    proto: tcp
 
 - name: Enable UFW
   ufw:

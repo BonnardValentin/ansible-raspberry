@@ -6,14 +6,16 @@
       - wget
     state: present
 
-- name: Install Netdata
+- name: Install Netdata (official script)
   shell: |
-    bash <(curl -Ss https://my-netdata.io/kickstart.sh) --non-interactive
+    curl -fsSL https://get.netdata.cloud/kickstart.sh | bash -s -- --non-interactive
   args:
-    creates: /usr/sbin/netdata
+    executable: /bin/bash
+  become: true
 
 - name: Enable and start Netdata
   systemd:
     name: netdata
     state: started
     enabled: yes
+  ignore_errors: yes

@@ -1,0 +1,20 @@
+# rsyslog configuration for security logging
+$ModLoad imuxsock
+$ModLoad imklog
+
+# Security logging
+$template SecurityLog,"/var/log/security/%$YEAR%/%$MONTH%/%$DAY%/security.log"
+$template AuditLog,"/var/log/audit/audit.log"
+
+# Log authentication events
+auth,authpriv.*    ?SecurityLog
+# Log kernel messages
+kern.*             /var/log/kern.log
+# Log all other messages
+*.info;mail.none;authpriv.none;cron.none    /var/log/messages
+# Log cron jobs
+cron.*             /var/log/cron.log
+# Log mail messages
+mail.*             /var/log/mail.log
+# Emergency messages
+*.emerg            :omusrmsg:*

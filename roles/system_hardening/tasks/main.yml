@@ -1,0 +1,130 @@
+---
+- name: Update system packages
+  apt:
+    upgrade: yes
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install security packages
+  apt:
+    name:
+      - auditd
+      - apparmor
+      - apparmor-utils
+      - rkhunter
+      - chkrootkit
+      - logwatch
+      - aide
+      - libpam-pwquality
+    state: present
+
+- name: Configure password quality
+  lineinfile:
+    path: /etc/security/pwquality.conf
+    regexp: '^{{ item.key }}'
+    line: '{{ item.key }} = {{ item.value }}'
+    state: present
+  loop:
+    - { key: 'minlen', value: '12' }
+    - { key: 'minclass', value: '3' }
+    - { key: 'maxrepeat', value: '3' }
+    - { key: 'gecoscheck', value: '1' }
+    - { key: 'dictcheck', value: '1' }
+
+- name: Configure login security
+  lineinfile:
+    path: /etc/login.defs
+    regexp: '^{{ item.key }}'
+    line: '{{ item.key }} {{ item.value }}'
+    state: present
+  loop:
+    - { key: 'PASS_MAX_DAYS', value: '90' }
+    - { key: 'PASS_MIN_DAYS', value: '7' }
+    - { key: 'PASS_WARN_AGE', value: '7' }
+    - { key: 'LOGIN_RETRIES', value: '3' }
+    - { key: 'LOGIN_TIMEOUT', value: '60' }
+
+- name: Configure session timeout
+  lineinfile:
+    path: /etc/profile
+    line: 'export TMOUT=900'
+    state: present
+
+- name: Disable unnecessary services
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+  loop:
+    - avahi-daemon
+    - cups
+    - cups-browsed
+    - isc-dhcp-server
+    - isc-dhcp-server6
+    - slapd
+    - nfs-kernel-server
+    - rpcbind
+    - bind9
+    - vsftpd
+    - apache2
+    - nginx
+  ignore_errors: yes
+
+- name: Configure kernel parameters
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  loop:
+    - { name: 'net.ipv4.ip_forward', value: '0' }
+    - { name: 'net.ipv4.conf.all.send_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.default.send_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.all.accept_source_route', value: '0' }
+    - { name: 'net.ipv4.conf.default.accept_source_route', value: '0' }
+    - { name: 'net.ipv4.conf.all.accept_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.default.accept_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.all.secure_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.default.secure_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.all.log_martians', value: '1' }
+    - { name: 'net.ipv4.conf.default.log_martians', value: '1' }
+    - { name: 'net.ipv4.icmp_echo_ignore_broadcasts', value: '1' }
+    - { name: 'net.ipv4.icmp_ignore_bogus_error_responses', value: '1' }
+    - { name: 'net.ipv4.conf.all.rp_filter', value: '1' }
+    - { name: 'net.ipv4.conf.default.rp_filter', value: '1' }
+    - { name: 'net.ipv4.tcp_syncookies', value: '1' }
+    - { name: 'net.ipv6.conf.all.accept_ra', value: '0' }
+    - { name: 'net.ipv6.conf.default.accept_ra', value: '0' }
+    - { name: 'net.ipv6.conf.all.accept_redirects', value: '0' }
+    - { name: 'net.ipv6.conf.default.accept_redirects', value: '0' }
+
+- name: Enable and configure auditd
+  systemd:
+    name: auditd
+    state: started
+    enabled: yes
+
+- name: Configure audit rules
+  copy:
+    content: |
+      -w /etc/passwd -p wa -k identity
+      -w /etc/group -p wa -k identity
+      -w /etc/shadow -p wa -k identity
+      -w /etc/gshadow -p wa -k identity
+      -w /etc/ssh/sshd_config -p wa -k sshd
+      -w /etc/sudoers -p wa -k scope
+      -w /var/log/auth.log -p wa -k authentication
+      -w /var/log/audit.log -p wa -k auditlog
+    dest: /etc/audit/rules.d/security.rules
+    mode: '0640'
+  notify: restart auditd
+
+- name: Configure AppArmor
+  systemd:
+    name: apparmor
+    state: started
+    enabled: yes
+
+- name: Enable AppArmor profiles
+  shell: aa-enforce /usr/sbin/sshd
+  ignore_errors: yes
