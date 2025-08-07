@@ -1,0 +1,10 @@
+---
+- name: Secure Cloud Server
+  hosts: cloud_servers
+  become: yes
+  roles:
+    - unattended-upgrades
+    - firewall
+    - ssh_hardening
+    - fail2ban
+    - monitoring
