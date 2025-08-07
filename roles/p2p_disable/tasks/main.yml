@@ -1,0 +1,13 @@
+---
+- name: Create modprobe.d directory
+  file:
+    path: /etc/modprobe.d
+    state: directory
+    mode: '0755'
+
+- name: Disable Wi-Fi P2P mode
+  copy:
+    content: "options brcmfmac p2pon=0"
+    dest: /etc/modprobe.d/brcmfmac.conf
+    mode: '0644'
+  notify: reload modules

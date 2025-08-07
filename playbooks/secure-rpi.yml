@@ -1,0 +1,12 @@
+---
+- name: Secure Raspberry Pi
+  hosts: raspberry_pi
+  become: yes
+  roles:
+    - unattended-upgrades
+    - firewall
+    - ssh_hardening
+    - fail2ban
+    - p2p_disable
+    - disable_bluetooth_audio
+    - monitoring

@@ -1,0 +1,5 @@
+---
+- name: reload modules
+  modprobe:
+    name: brcmfmac
+    state: reloaded

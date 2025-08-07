@@ -1,0 +1,10 @@
+---
+- name: reload modules
+  modprobe:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - btusb
+    - bluetooth
+    - snd-bcm2835
+    - snd-pcm

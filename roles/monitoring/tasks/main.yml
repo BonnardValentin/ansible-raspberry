@@ -1,0 +1,19 @@
+---
+- name: Install required packages
+  apt:
+    name:
+      - curl
+      - wget
+    state: present
+
+- name: Install Netdata
+  shell: |
+    bash <(curl -Ss https://my-netdata.io/kickstart.sh) --non-interactive
+  args:
+    creates: /usr/sbin/netdata
+
+- name: Enable and start Netdata
+  systemd:
+    name: netdata
+    state: started
+    enabled: yes
